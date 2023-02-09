@@ -19,13 +19,13 @@ volatile uint16_t _static_c_buffer_len = 0;
 static void tx_event(transfer_t *t)
 {
 
-    //TODO: need to understand how much datais ready to transfer
+    //TODO: need to understand how much data is ready to transfer
     //TODO: copy the data to the iso_transmit_buffer or straight to the tx struct
     //usb_rawiso_sync_feedback = feedback_accumulator >> usb_rawiso_sync_rshift;
     //memset(usb_rawiso_transmit_buffer, 0xFF, RAWISO_TX_SIZE);
     //if( (_static_c_buffer_len) > 0){
-        usb_prepare_transfer(&tx_transfer, _static_c_buffer, _static_c_buffer_len*2, 0);
-        arm_dcache_flush_delete(_static_c_buffer, RAWISO_TX_SIZE);
+        usb_prepare_transfer(&tx_transfer, _static_c_buffer, _static_c_buffer_len*sizeof(uint16_t), 0);
+        //arm_dcache_flush_delete(_static_c_buffer, RAWISO_TX_SIZE);
         usb_transmit(RAWISO_TX_ENDPOINT, &tx_transfer);
         _static_c_buffer_len = 0 ;
     //}
@@ -49,12 +49,12 @@ bool IsochronousTx::available(void)
     return (_static_c_buffer_len == 0) ;
 }
 
-uint32_t IsochronousTx::send(uint16_t * data, uint16_t len)
+uint32_t IsochronousTx::send(uint8_t * data, uint16_t len)
 {
     if(this->available()){
-        if(len > (RAWISO_TX_SIZE/sizeof(uint16_t))) len = (RAWISO_TX_SIZE/sizeof(uint16_t)) ;
-        memcpy(_static_c_buffer, data, len * sizeof(uint16_t));
-        _static_c_buffer_len = len ;
+        if(len > RAWISO_TX_SIZE) len = RAWISO_TX_SIZE  ;
+        memcpy(_static_c_buffer, data, len );
+        _static_c_buffer_len = len/sizeof(uint16_t) ;
         return len ;
     }
     return 0;

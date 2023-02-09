@@ -25,7 +25,7 @@ class IsochronousTx
 public:
   IsochronousTx(void){ begin(); }
   bool available(void);
-  uint32_t send(uint16_t * data, uint16_t len);
+  uint32_t send(uint8_t * data, uint16_t len);
   void begin(void);
 private:
   static void tx_event(transfer_t *t) ;
