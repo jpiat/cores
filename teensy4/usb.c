@@ -4,6 +4,7 @@
 #include "usb_serial.h"
 #include "usb_seremu.h"
 #include "usb_rawhid.h"
+#include "usb_rawiso.h"
 #include "usb_keyboard.h"
 #include "usb_mouse.h"
 #include "usb_joystick.h"
@@ -455,6 +456,9 @@ static void endpoint0_setup(uint64_t setupdata)
 		#endif
 		#if defined(RAWHID_INTERFACE)
 		usb_rawhid_configure();
+		#endif
+        #if defined(RAWISO_INTERFACE)
+		usb_rawiso_configure();
 		#endif
 		#if defined(KEYBOARD_INTERFACE)
 		usb_keyboard_configure();

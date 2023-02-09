@@ -472,8 +472,9 @@ static uint8_t seremu_report_desc[] = {
 };
 #endif
 
+
 #ifdef RAWHID_INTERFACE
-static uint8_t rawhid_report_desc[] = {
+static uint8_t rawiso_report_desc[] = {
         0x06, LSB(RAWHID_USAGE_PAGE), MSB(RAWHID_USAGE_PAGE),
         0x0A, LSB(RAWHID_USAGE), MSB(RAWHID_USAGE),
         0xA1, 0x01,                     // Collection 0x01
@@ -595,7 +596,17 @@ static uint8_t microsoft_os_compatible_id_desc[] = {
 #define RAWHID_INTERFACE_DESC_SIZE	0
 #endif
 
-#define FLIGHTSIM_INTERFACE_DESC_POS	RAWHID_INTERFACE_DESC_POS+RAWHID_INTERFACE_DESC_SIZE
+
+#define RAWISO_INTERFACE_DESC_POS	RAWHID_INTERFACE_DESC_POS+RAWHID_INTERFACE_DESC_SIZE
+#ifdef  RAWISO_INTERFACE
+#warning "RAW ISO enabled!"
+#define RAWISO_INTERFACE_DESC_SIZE	9+7
+#else
+#warning "RAW ISO not enabled!"
+#define RAWISO_INTERFACE_DESC_SIZE	0
+#endif
+
+#define FLIGHTSIM_INTERFACE_DESC_POS	RAWISO_INTERFACE_DESC_POS+RAWISO_INTERFACE_DESC_SIZE
 #ifdef  FLIGHTSIM_INTERFACE
 #define FLIGHTSIM_INTERFACE_DESC_SIZE	9+9+7+7
 #define FLIGHTSIM_HID_DESC_OFFSET	FLIGHTSIM_INTERFACE_DESC_POS+9
@@ -605,6 +616,7 @@ static uint8_t microsoft_os_compatible_id_desc[] = {
 
 #define SEREMU_INTERFACE_DESC_POS	FLIGHTSIM_INTERFACE_DESC_POS+FLIGHTSIM_INTERFACE_DESC_SIZE
 #ifdef  SEREMU_INTERFACE
+#warning "SEREMU enabled!"
 #define SEREMU_INTERFACE_DESC_SIZE	9+9+7+7
 #define SEREMU_HID_DESC_OFFSET		SEREMU_INTERFACE_DESC_POS+9
 #else
@@ -1232,6 +1244,28 @@ PROGMEM const uint8_t usb_config_descriptor_480[CONFIG_DESC_SIZE] = {
         RAWHID_RX_SIZE, 0,                      // wMaxPacketSize
         RAWHID_RX_INTERVAL,			// bInterval
 #endif // RAWHID_INTERFACE
+
+
+#ifdef RAWISO_INTERFACE
+	// configuration for 480 Mbit/sec speed
+        // interface descriptor, USB spec 9.6.5, page 267-269, Table 9-12
+        9,                                      // bLength
+        4,                                      // bDescriptorType
+        RAWISO_INTERFACE,                       // bInterfaceNumber
+        0,                                      // bAlternateSetting
+        1,                                      // bNumEndpoints
+        0xFF,                                   // bInterfaceClass (0x03 = HID)
+        0x00,                                   // bInterfaceSubClass
+        0x00,                                   // bInterfaceProtocol
+        0,                                      // iInterface
+        // endpoint descriptor, USB spec 9.6.6, page 269-271, Table 9-13
+        7,                                      // bLength
+        5,                                      // bDescriptorType
+        RAWISO_TX_ENDPOINT | 0x80,              // bEndpointAddress
+        0x01,                                   // bmAttributes (0x03=intr)
+        LSB(RAWISO_TX_SIZE), MSB(RAWISO_TX_SIZE),                      // wMaxPacketSize
+        RAWISO_TX_INTERVAL,                     // bInterval
+#endif // RAWISO_INTERFACE
 
 #ifdef FLIGHTSIM_INTERFACE
 	// configuration for 480 Mbit/sec speed
