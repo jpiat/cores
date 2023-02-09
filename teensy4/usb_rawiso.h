@@ -28,8 +28,6 @@ public:
   uint32_t send(uint16_t * data, uint16_t len);
   void begin(void);
 private:
-  static uint16_t _usb_rawiso_transmit_buffer[RAWISO_TX_SIZE/2];
-  static uint16_t _usb_rawiso_transmit_buffer_len ;
   static void tx_event(transfer_t *t) ;
 
 };
