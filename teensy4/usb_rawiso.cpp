@@ -6,17 +6,19 @@
 #ifdef RAWISO_INTERFACE // defined by usb_dev.h -> usb_desc.h
 
 extern volatile uint8_t usb_high_speed;
-static void tx_event(transfer_t *t);
 /*static*/ transfer_t tx_transfer __attribute__ ((used, aligned(32)));
 
 
 /*DMAMEM*/ //uint16_t usb_rawiso_transmit_buffer[RAWISO_TX_SIZE/2] __attribute__ ((used, aligned(32)));
 
 
+IsochronousTx * activeObj = nullptr ;
 uint16_t _static_c_buffer[RAWISO_TX_SIZE/2] __attribute__ ((used, aligned(32))) ;
 volatile uint16_t _static_c_buffer_len = 0;
+volatile uint8_t counter = 0 ;
+volatile bool iso_underrun = true ;
 
-static void tx_event(transfer_t *t)
+void tx_event(transfer_t *t)
 {
 
     //TODO: need to understand how much data is ready to transfer
@@ -24,10 +26,40 @@ static void tx_event(transfer_t *t)
     //usb_rawiso_sync_feedback = feedback_accumulator >> usb_rawiso_sync_rshift;
     //memset(usb_rawiso_transmit_buffer, 0xFF, RAWISO_TX_SIZE);
     //if( (_static_c_buffer_len) > 0){
-        usb_prepare_transfer(&tx_transfer, _static_c_buffer, _static_c_buffer_len*sizeof(uint16_t), 0);
-        //arm_dcache_flush_delete(_static_c_buffer, RAWISO_TX_SIZE);
-        usb_transmit(RAWISO_TX_ENDPOINT, &tx_transfer);
-        _static_c_buffer_len = 0 ;
+        //t->callback_param
+        //TODO: cannot send nothing, the transfer should occur event with an incomplete data
+
+        //micro frame 
+        if(activeObj != nullptr){
+            uint16_t lenOfBuffer = 0 ;
+            while(activeObj->mBlockAvailable > 1 && lenOfBuffer < (RAWISO_TX_SIZE/sizeof(uint16_t))){
+                memcpy(&_static_c_buffer[lenOfBuffer], activeObj -> mBlockPtr[activeObj -> mBlockReadIndex], RAW_ISO_BLOCK_SIZE);
+                activeObj -> mBlockReadIndex ++ ;
+                activeObj -> mBlockReadIndex = activeObj -> mBlockReadIndex >= NB_BLOCKS_IN_FIFO ? 0 : activeObj -> mBlockReadIndex ;
+                activeObj -> mBlockAvailable -- ; //Should mutex protect for safety
+                lenOfBuffer += RAW_ISO_BLOCK_SIZE/sizeof(uint16_t);
+            }
+            if(lenOfBuffer == 0){
+                memset(&tx_transfer, 0, sizeof(tx_transfer));
+            }
+            usb_prepare_transfer(&tx_transfer, _static_c_buffer, lenOfBuffer*sizeof(uint16_t), 0);
+            //arm_dcache_flush_delete(_static_c_buffer, lenOfBuffer);
+            usb_transmit(RAWISO_TX_ENDPOINT, &tx_transfer);
+        }else{
+            //UNDERRUN
+            usb_transmit(RAWISO_TX_ENDPOINT, &tx_transfer);
+        }
+        
+        /*
+        uint16_t offset = _static_c_buffer[(RAWISO_TX_SIZE/2/2) - 1];
+        for(int i = 0 ; i < (RAWISO_TX_SIZE/2) ; i ++){
+            _static_c_buffer[i] = offset + i ;
+        }
+        usb_prepare_transfer(&tx_transfer, _static_c_buffer, RAWISO_TX_SIZE-4, 0);
+        arm_dcache_flush_delete(_static_c_buffer, RAWISO_TX_SIZE);
+        usb_transmit(RAWISO_TX_ENDPOINT, &tx_transfer);*/
+        //counter ++ ;
+        //_static_c_buffer_len = 0;
     //}
 }
 
@@ -42,22 +74,38 @@ void usb_rawiso_configure(void)
 void IsochronousTx::begin(void)
 {
     _static_c_buffer_len = 0 ;
+    this -> mBlockAvailable = 0 ;
+    this -> mBlockWriteIndex = 0;
+    this -> mBlockReadIndex = 0;
+    this -> mBlockPtr = (uint8_t **) malloc(NB_BLOCKS_IN_FIFO * sizeof(uint8_t *));
+    for(int i = 0 ; i < NB_BLOCKS_IN_FIFO ; i ++){
+        this -> mBlockPtr[i] = (uint8_t *) malloc(RAW_ISO_BLOCK_SIZE) ;
+    }
+    activeObj = this ;
 }
 
 bool IsochronousTx::available(void)
-{
-    return (_static_c_buffer_len == 0) ;
+{   
+    bool res ;
+    __disable_irq();
+    res =  this->mBlockAvailable < NB_BLOCKS_IN_FIFO ;
+    __enable_irq();
+    return res ;
 }
 
-uint32_t IsochronousTx::send(uint8_t * data, uint16_t len)
+bool IsochronousTx::sendBlock(uint8_t * data)
 {
-    if(this->available()){
-        if(len > RAWISO_TX_SIZE) len = RAWISO_TX_SIZE  ;
-        memcpy(_static_c_buffer, data, len );
-        _static_c_buffer_len = len/sizeof(uint16_t) ;
-        return len ;
+
+    __disable_irq();
+    bool sent = false ;
+    if(this->mBlockAvailable < NB_BLOCKS_IN_FIFO){
+        memcpy(this -> mBlockPtr[this -> mBlockWriteIndex], data, RAW_ISO_BLOCK_SIZE);
+        this -> mBlockWriteIndex ++ ;
+        this -> mBlockWriteIndex = this -> mBlockWriteIndex >= NB_BLOCKS_IN_FIFO ? 0 : this -> mBlockWriteIndex ;
+        this -> mBlockAvailable ++ ; 
     }
-    return 0;
+    __enable_irq();
+    return sent;
 }
 
 
