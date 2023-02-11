@@ -13,7 +13,11 @@ extern volatile uint8_t usb_high_speed;
 
 
 IsochronousTx * activeObj = nullptr ;
-uint16_t _static_c_buffer[RAWISO_TX_SIZE/2] __attribute__ ((used, aligned(32))) ;
+uint8_t _static_c_buffer[RAWISO_TX_SIZE] __attribute__ ((used, aligned(32))) ;
+
+uint32_t _test_pattern_0[RAWISO_TX_SIZE/sizeof(uint32_t)] __attribute__ ((used, aligned(32))) ;
+uint32_t _test_pattern_1[RAWISO_TX_SIZE/sizeof(uint32_t)] __attribute__ ((used, aligned(32))) ;
+
 volatile uint16_t _static_c_buffer_len = 0;
 volatile uint8_t counter = 0 ;
 volatile bool iso_underrun = true ;
@@ -30,25 +34,35 @@ void tx_event(transfer_t *t)
         //TODO: cannot send nothing, the transfer should occur event with an incomplete data
 
         //micro frame 
-        if(activeObj != nullptr){
+        /*if(activeObj != nullptr){
             uint16_t lenOfBuffer = 0 ;
-            while(activeObj->mBlockAvailable > 1 && lenOfBuffer < (RAWISO_TX_SIZE/sizeof(uint16_t))){
-                memcpy(&_static_c_buffer[lenOfBuffer], activeObj -> mBlockPtr[activeObj -> mBlockReadIndex], RAW_ISO_BLOCK_SIZE);
+            while(activeObj->mBlockAvailable > 1 && lenOfBuffer < RAWISO_TX_SIZE){
+                uint16_t k ;
+                for(k = 0 ; k < RAW_ISO_BLOCK_SIZE; k ++){//Should copy in a loop using 32bits pointers
+                    _static_c_buffer[lenOfBuffer++] = activeObj -> mBlockPtr[activeObj -> mBlockReadIndex][k] ;
+                }
+                //memcpy(&_static_c_buffer[lenOfBuffer], activeObj -> mBlockPtr[activeObj -> mBlockReadIndex], RAW_ISO_BLOCK_SIZE);
                 activeObj -> mBlockReadIndex ++ ;
                 activeObj -> mBlockReadIndex = activeObj -> mBlockReadIndex >= NB_BLOCKS_IN_FIFO ? 0 : activeObj -> mBlockReadIndex ;
                 activeObj -> mBlockAvailable -- ; //Should mutex protect for safety
-                lenOfBuffer += RAW_ISO_BLOCK_SIZE/sizeof(uint16_t);
+                //lenOfBuffer += RAW_ISO_BLOCK_SIZE;
             }
-            if(lenOfBuffer == 0){
-                memset(&tx_transfer, 0, sizeof(tx_transfer));
-            }
-            usb_prepare_transfer(&tx_transfer, _static_c_buffer, lenOfBuffer*sizeof(uint16_t), 0);
+            usb_prepare_transfer(&tx_transfer, _static_c_buffer, lenOfBuffer, 0);
             //arm_dcache_flush_delete(_static_c_buffer, lenOfBuffer);
             usb_transmit(RAWISO_TX_ENDPOINT, &tx_transfer);
         }else{
             //UNDERRUN
             usb_transmit(RAWISO_TX_ENDPOINT, &tx_transfer);
+        }*/
+        if(tx_transfer.callback_param){
+            usb_prepare_transfer(&tx_transfer, _test_pattern_0, 768, 0);
+            arm_dcache_flush_delete(_test_pattern_0, 768);
+        }else{
+            usb_prepare_transfer(&tx_transfer, _test_pattern_1, 768, 1);
+            arm_dcache_flush_delete(_test_pattern_1, 768);
         }
+        usb_transmit(RAWISO_TX_ENDPOINT, &tx_transfer);
+
         
         /*
         uint16_t offset = _static_c_buffer[(RAWISO_TX_SIZE/2/2) - 1];
@@ -65,7 +79,11 @@ void tx_event(transfer_t *t)
 
 void usb_rawiso_configure(void)
 {
-  printf("iso\n");
+  uint32_t initial_value = 0xDEADBEEF;
+  for(uint32_t i = 0 ; i < (RAWISO_TX_SIZE/sizeof(uint32_t)) ; i ++){
+        _test_pattern_0[i] = initial_value ;
+        _test_pattern_1[i] = ~initial_value ;
+  }
   memset(&tx_transfer, 0, sizeof(tx_transfer));
   usb_config_tx_iso(RAWISO_TX_ENDPOINT, RAWISO_TX_SIZE, 1, tx_event);
   tx_event(NULL);
