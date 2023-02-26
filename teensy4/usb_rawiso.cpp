@@ -3,6 +3,7 @@
 #include "usb_rawiso.h"
 #include "debug/printf.h"
 
+
 #ifdef RAWISO_INTERFACE // defined by usb_dev.h -> usb_desc.h
 
 extern volatile uint8_t usb_high_speed;
@@ -22,6 +23,9 @@ volatile uint16_t _static_c_buffer_len = 0;
 volatile uint8_t counter = 0 ;
 volatile bool iso_underrun = true ;
 
+
+
+#define TX_TARGET 768
 void tx_event(transfer_t *t)
 {
 
@@ -36,7 +40,8 @@ void tx_event(transfer_t *t)
         //micro frame 
         if(activeObj != nullptr){
             uint16_t lenOfBuffer = 0 ;
-            while(activeObj->mBlockAvailable > 0 && lenOfBuffer < (RAWISO_TX_SIZE/sizeof(uint32_t))){
+            uint16_t targetBufferLen = activeObj->mBlockAvailable > (NB_BLOCKS_IN_FIFO/2) ? (TX_TARGET+RAW_ISO_BLOCK_SIZE) : TX_TARGET ;
+            while(activeObj->mBlockAvailable > 0 && lenOfBuffer < (targetBufferLen/sizeof(uint32_t))){
                 uint16_t k ;
                 memcpy(&_static_c_buffer[lenOfBuffer], activeObj -> mBlockPtr[activeObj -> mBlockReadIndex], RAW_ISO_BLOCK_SIZE);
                 activeObj -> mBlockReadIndex ++ ;
@@ -125,39 +130,5 @@ bool IsochronousTx::sendBlock(uint8_t * data)
     return sent;
 }
 
-
-struct setup_struct {
-  union {
-    struct {
-  uint8_t bmRequestType;
-  uint8_t bRequest;
-  union {
-    struct {
-      uint8_t bChannel;  // 0=main, 1=left, 2=right
-      uint8_t bCS;       // Control Selector
-    };
-    uint16_t wValue;
-  };
-  union {
-    struct {
-      uint8_t bIfEp;     // type of entity
-      uint8_t bEntityId; // UnitID, TerminalID, etc.
-    };
-    uint16_t wIndex;
-  };
-  uint16_t wLength;
-    };
-  };
-};
-
-int usb_rawiso_tx_get_feature(void *stp, uint8_t *data, uint32_t *datalen)
-{
-  return 0;
-}
-
-int usb_rawiso_tx_set_feature(void *stp, uint8_t *buf) 
-{
-  return 0;
-}
 
 #endif //RAWHISO_INTERFACE
