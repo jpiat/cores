@@ -42,7 +42,6 @@ void tx_event(transfer_t *t)
             uint16_t lenOfBuffer = 0 ;
             uint16_t targetBufferLen = activeObj->mBlockAvailable > (NB_BLOCKS_IN_FIFO/2) ? (TX_TARGET+RAW_ISO_BLOCK_SIZE) : TX_TARGET ;
             while(activeObj->mBlockAvailable > 0 && lenOfBuffer < (targetBufferLen/sizeof(uint32_t))){
-                uint16_t k ;
                 memcpy(&_static_c_buffer[lenOfBuffer], activeObj -> mBlockPtr[activeObj -> mBlockReadIndex], RAW_ISO_BLOCK_SIZE);
                 activeObj -> mBlockReadIndex ++ ;
                 activeObj -> mBlockReadIndex = activeObj -> mBlockReadIndex >= NB_BLOCKS_IN_FIFO ? 0 : activeObj -> mBlockReadIndex ;
@@ -131,4 +130,4 @@ bool IsochronousTx::sendBlock(uint8_t * data)
 }
 
 
-#endif //RAWHISO_INTERFACE
+#endif //RAWISO_INTERFACE
