@@ -600,7 +600,7 @@ static uint8_t microsoft_os_compatible_id_desc[] = {
 #define RAWISO_INTERFACE_DESC_POS	RAWHID_INTERFACE_DESC_POS+RAWHID_INTERFACE_DESC_SIZE
 #ifdef  RAWISO_INTERFACE
 #warning "RAW ISO enabled!"
-#define RAWISO_INTERFACE_DESC_SIZE	9+7
+#define RAWISO_INTERFACE_DESC_SIZE	9+7+7
 #else
 #warning "RAW ISO not enabled!"
 #define RAWISO_INTERFACE_DESC_SIZE	0
@@ -1253,7 +1253,7 @@ PROGMEM const uint8_t usb_config_descriptor_480[CONFIG_DESC_SIZE] = {
         4,                                      // bDescriptorType
         RAWISO_INTERFACE,                       // bInterfaceNumber
         0,                                      // bAlternateSetting
-        1,                                      // bNumEndpoints
+        2,                                      // bNumEndpoints
         0xFF,                                   // bInterfaceClass (0x03 = HID)
         0x00,                                   // bInterfaceSubClass
         0x00,                                   // bInterfaceProtocol
@@ -1265,6 +1265,12 @@ PROGMEM const uint8_t usb_config_descriptor_480[CONFIG_DESC_SIZE] = {
         0x01,                                   // bmAttributes (0x03=intr)
         LSB(RAWISO_TX_SIZE), MSB(RAWISO_TX_SIZE),                      // wMaxPacketSize
         RAWISO_TX_INTERVAL,                     // bInterval
+        7,                                      // bLength
+        5, 
+        RAWISO_RX_ENDPOINT,              // bEndpointAddress
+        0x01,                                   // bmAttributes (0x03=intr)
+        LSB(RAWISO_RX_SIZE), MSB(RAWISO_RX_SIZE),                      // wMaxPacketSize
+        RAWISO_RX_INTERVAL,                     // bInterval
 #endif // RAWISO_INTERFACE
 
 #ifdef FLIGHTSIM_INTERFACE

@@ -22,19 +22,28 @@ extern int usb_rawiso_get_feature(void *stp, uint8_t *data, uint32_t *datalen);
 
 #define NB_BLOCKS_IN_FIFO 32
 #define RAW_ISO_BLOCK_SIZE 64
-class IsochronousTx
+class IsochronousRxTx
 {
 public:
-  IsochronousTx(void){ begin(); }
+  IsochronousRxTx(void){ begin(); }
   bool available(void);
   bool sendBlock(uint8_t * data);
+  bool rcvBlock(uint8_t * data);
   void begin(void);
-  volatile uint16_t mBlockAvailable ;
-  volatile uint8_t mBlockWriteIndex ;
-  volatile uint8_t mBlockReadIndex ;
-  uint32_t ** mBlockPtr ;
+  
+  volatile uint16_t mOutBlockAvailable ;
+  volatile uint8_t mOutBlockWriteIndex ;
+  volatile uint8_t mOutBlockReadIndex ;
+  uint32_t ** mOutBlockPtr ;
+
+  volatile uint16_t mInBlockAvailable ;
+  volatile uint8_t mInBlockWriteIndex ;
+  volatile uint8_t mInBlockReadIndex ;
+  uint32_t ** mInBlockPtr ;
+
 private:
   static void tx_event(transfer_t *t) ;
+  static void rx_event(transfer_t *t) ;
 };
 #endif // __cplusplus
 
