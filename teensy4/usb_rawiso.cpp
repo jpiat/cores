@@ -35,8 +35,8 @@ static void rx_event(transfer_t *t)
         uint32_t * data = _static_c_rx_buffer ;
         while(len > 0){
             if(activeObj->mInBlockAvailable < NB_BLOCKS_IN_FIFO){
-                memcpy(activeObj -> mInBlockPtr[activeObj -> mInBlockReadIndex], data, RAW_ISO_BLOCK_SIZE);
-                activeObj -> mInBlockWriteIndex -- ;
+                memcpy(activeObj -> mInBlockPtr[activeObj -> mInBlockWriteIndex], data, RAW_ISO_BLOCK_SIZE);
+                activeObj -> mInBlockWriteIndex ++ ;
                 activeObj -> mInBlockWriteIndex = activeObj -> mInBlockWriteIndex >= NB_BLOCKS_IN_FIFO ? 0 : activeObj -> mInBlockWriteIndex ;
                 activeObj -> mInBlockAvailable ++ ; 
             }else{
@@ -175,8 +175,8 @@ bool IsochronousRxTx::rcvBlock(uint8_t * data)
     bool rcv = false ;
     if(this->mInBlockAvailable > 0){
         memcpy(data, this -> mInBlockPtr[this -> mInBlockReadIndex], RAW_ISO_BLOCK_SIZE);
-        this -> mInBlockReadIndex -- ;
-        this -> mInBlockReadIndex = this -> mInBlockReadIndex < 0 ? (NB_BLOCKS_IN_FIFO - 1) : this -> mInBlockReadIndex ;
+        this -> mInBlockReadIndex ++ ;
+        this -> mInBlockReadIndex = this -> mInBlockReadIndex >=  NB_BLOCKS_IN_FIFO ? 0 : this -> mInBlockReadIndex ;
         this -> mInBlockAvailable -- ; 
         rcv = true ;
     }

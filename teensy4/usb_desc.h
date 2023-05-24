@@ -628,9 +628,9 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define RAWISO_TX_ENDPOINT    3
   #define RAWISO_TX_INTERVAL    2	 // TODO: is this ok for 480 Mbit speed
   #define RAWISO_TX_SIZE        (1024) //One block overhead to allow to transmit either 6 or 7 blocks of data
-  #define RAWISO_RX_ENDPOINT    4
-  #define RAWISO_RX_INTERVAL    2	 // TODO: is this ok for 480 Mbit speed
-  #define RAWISO_RX_SIZE        (1024) //One block overhead to allow to transmit either 6 or 7 blocks of data
+  #define RAWISO_RX_ENDPOINT    3
+  #define RAWISO_RX_INTERVAL    4	 // TODO: is this ok for 480 Mbit speed
+  #define RAWISO_RX_SIZE        (256) //One block overhead to allow to transmit either 6 or 7 blocks of data
   #define SEREMU_INTERFACE      1	// Serial emulation
   #define SEREMU_TX_ENDPOINT    2
   #define SEREMU_TX_SIZE        64
