@@ -16,7 +16,7 @@ transfer_t rx_transfer __attribute__ ((used, aligned(32)));
 
 IsochronousRxTx * activeObj = nullptr ;
 uint32_t _static_c_tx_buffer[RAWISO_TX_SIZE] __attribute__ ((used, aligned(32))) ;
-uint32_t _static_c_rx_buffer[RAWISO_TX_SIZE] __attribute__ ((used, aligned(32))) ;
+uint32_t _static_c_rx_buffer[RAWISO_RX_SIZE] __attribute__ ((used, aligned(32))) ;
 
 
 uint32_t _test_pattern_0[RAWISO_TX_SIZE/sizeof(uint32_t)] __attribute__ ((used, aligned(32))) ;
@@ -32,7 +32,9 @@ static void rx_event(transfer_t *t)
 {
 	if (t && activeObj) {
 		int len = RAWISO_RX_SIZE - ((rx_transfer.status >> 16) & 0x7FFF);
+
         uint32_t * data = _static_c_rx_buffer ;
+        Serial.println(len);
         while(len > 0){
             if(activeObj->mInBlockAvailable < NB_BLOCKS_IN_FIFO){
                 memcpy(activeObj -> mInBlockPtr[activeObj -> mInBlockWriteIndex], data, RAW_ISO_BLOCK_SIZE);
