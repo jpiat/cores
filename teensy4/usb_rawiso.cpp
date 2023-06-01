@@ -34,7 +34,6 @@ static void rx_event(transfer_t *t)
 		int len = RAWISO_RX_SIZE - ((rx_transfer.status >> 16) & 0x7FFF);
 
         uint32_t * data = _static_c_rx_buffer ;
-        Serial.println(len);
         while(len > 0){
             if(activeObj->mInBlockAvailable < NB_BLOCKS_IN_FIFO){
                 memcpy(activeObj -> mInBlockPtr[activeObj -> mInBlockWriteIndex], data, RAW_ISO_BLOCK_SIZE);
@@ -80,6 +79,7 @@ void tx_event(transfer_t *t)
             usb_prepare_transfer(&tx_transfer, _static_c_tx_buffer, lenOfBuffer*sizeof(uint32_t), 0);
             arm_dcache_flush_delete(_static_c_tx_buffer, lenOfBuffer*sizeof(uint32_t));
             usb_transmit(RAWISO_TX_ENDPOINT, &tx_transfer);
+
         }else{
             //UNDERRUN
             memset(&tx_transfer, 0, sizeof(tx_transfer));
