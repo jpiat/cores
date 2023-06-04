@@ -186,5 +186,14 @@ bool IsochronousRxTx::rcvBlock(uint8_t * data)
     return rcv;
 }
 
+uint32_t IsochronousRxTx::rcvAvailable()
+{
+    uint32_t available = 0 ;
+    __disable_irq();
+    available = this->mInBlockAvailable  ;
+    __enable_irq();
+    return available;
+}
+
 
 #endif //RAWISO_INTERFACE
