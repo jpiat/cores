@@ -600,7 +600,7 @@ static uint8_t microsoft_os_compatible_id_desc[] = {
 #define RAWISO_INTERFACE_DESC_POS	RAWHID_INTERFACE_DESC_POS+RAWHID_INTERFACE_DESC_SIZE
 #ifdef  RAWISO_INTERFACE
 #warning "RAW ISO enabled!"
-#define RAWISO_INTERFACE_DESC_SIZE	9+7+7
+#define RAWISO_INTERFACE_DESC_SIZE	9+7+7+9+7
 #else
 #warning "RAW ISO not enabled!"
 #define RAWISO_INTERFACE_DESC_SIZE	0
@@ -1257,7 +1257,7 @@ PROGMEM const uint8_t usb_config_descriptor_480[CONFIG_DESC_SIZE] = {
         0xFF,                                   // bInterfaceClass (0x03 = HID)
         0x00,                                   // bInterfaceSubClass
         0x00,                                   // bInterfaceProtocol
-        0,                                      // iInterface
+        1,                                      // iInterface
         // endpoint descriptor, USB spec 9.6.6, page 269-271, Table 9-13
         7,                                      // bLength
         5,                                      // bDescriptorType
@@ -1271,7 +1271,26 @@ PROGMEM const uint8_t usb_config_descriptor_480[CONFIG_DESC_SIZE] = {
         0x01,                                   // bmAttributes (0x03=intr)
         LSB(RAWISO_RX_SIZE), MSB(RAWISO_RX_SIZE),                      // wMaxPacketSize
         RAWISO_RX_INTERVAL,                     // bInterval
+        9,                                      // bLength
+        4,                                      // bDescriptorType
+        RAWISO_SYNC_INTERFACE,                       // bInterfaceNumber
+        0,                                      // bAlternateSetting
+        2,                                      // bNumEndpoints
+        0xFF,                                   // bInterfaceClass (0x03 = HID)
+        0x00,                                   // bInterfaceSubClass
+        0x00,                                   // bInterfaceProtocol
+        0,                                      // iInterface
+        // endpoint descriptor, USB spec 9.6.6, page 269-271, Table 9-13
+        7,                                      // bLength
+        5,                                      // bDescriptorType
+        RAWISO_SYNC_ENDPOINT | 0x80,              // bEndpointAddress
+        0x01,                                   // bmAttributes (0x03=intr)
+        LSB(RAWISO_SYNC_TX_SIZE), MSB(RAWISO_SYNC_TX_SIZE),                      // wMaxPacketSize
+        RAWISO_SYNC_TX_INTERVAL,                     // bInterval
 #endif // RAWISO_INTERFACE
+
+
+
 
 #ifdef FLIGHTSIM_INTERFACE
 	// configuration for 480 Mbit/sec speed

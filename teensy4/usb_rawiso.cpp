@@ -9,6 +9,7 @@
 extern volatile uint8_t usb_high_speed;
 transfer_t tx_transfer __attribute__ ((used, aligned(32)));
 transfer_t rx_transfer __attribute__ ((used, aligned(32)));
+transfer_t sync_transfer __attribute__ ((used, aligned(32)));
 
 
 /*DMAMEM*/ //uint16_t usb_rawiso_transmit_buffer[RAWISO_TX_SIZE/2] __attribute__ ((used, aligned(32)));
@@ -17,7 +18,7 @@ transfer_t rx_transfer __attribute__ ((used, aligned(32)));
 IsochronousRxTx * activeObj = nullptr ;
 uint32_t _static_c_tx_buffer[RAWISO_TX_SIZE] __attribute__ ((used, aligned(32))) ;
 uint32_t _static_c_rx_buffer[RAWISO_RX_SIZE] __attribute__ ((used, aligned(32))) ;
-
+uint32_t _static_c_sync_buffer[1] __attribute__ ((used, aligned(32))) ;
 
 uint32_t _test_pattern_0[RAWISO_TX_SIZE/sizeof(uint32_t)] __attribute__ ((used, aligned(32))) ;
 uint32_t _test_pattern_1[RAWISO_TX_SIZE/sizeof(uint32_t)] __attribute__ ((used, aligned(32))) ;
@@ -108,6 +109,27 @@ void tx_event(transfer_t *t)
     //}
 }
 
+void sync_event(transfer_t *t)
+{
+
+        if(activeObj != nullptr){
+            uint8_t * sync_word = (uint8_t * ) &_static_c_sync_buffer[0];
+            sync_word[0] = NB_BLOCKS_IN_FIFO ;
+            sync_word[1] = activeObj->mOutBlockAvailable ;
+            sync_word[2] = NB_BLOCKS_IN_FIFO ;
+            sync_word[3] = activeObj-> mInBlockAvailable;
+            usb_prepare_transfer(&sync_transfer, _static_c_sync_buffer, sizeof(uint32_t), 0);
+            arm_dcache_flush_delete(_static_c_sync_buffer, sizeof(uint32_t));
+            usb_transmit(RAWISO_SYNC_ENDPOINT, &sync_transfer);
+        }else{
+            //UNDERRUN
+            memset(&sync_transfer, 0, sizeof(sync_transfer));
+            usb_transmit(RAWISO_SYNC_ENDPOINT, &sync_transfer);
+        }
+
+}
+
+
 void usb_rawiso_configure(void)
 {
   uint32_t initial_value = 0xDEADBEEF;
@@ -121,6 +143,8 @@ void usb_rawiso_configure(void)
   memset(&tx_transfer, 0, sizeof(tx_transfer));
   usb_config_tx_iso(RAWISO_TX_ENDPOINT, RAWISO_TX_SIZE, 1, tx_event);
   tx_event(NULL);
+  usb_config_tx_iso(RAWISO_SYNC_ENDPOINT, RAWISO_SYNC_TX_SIZE, 1, sync_event);
+  sync_event(NULL);
 }
 
 void IsochronousRxTx::begin(void)
