@@ -37,15 +37,15 @@ static void rx_event(transfer_t *t)
         uint32_t * data = _static_c_rx_buffer ;
         while(len > 0){
             if(activeObj->mInBlockAvailable < NB_BLOCKS_IN_FIFO){
-                memcpy(activeObj -> mInBlockPtr[activeObj -> mInBlockWriteIndex], data, RAW_ISO_BLOCK_SIZE);
+                memcpy(activeObj -> mInBlockPtr[activeObj -> mInBlockWriteIndex], data, RAW_ISO_BLOCK_IN_SIZE);
                 activeObj -> mInBlockWriteIndex ++ ;
                 activeObj -> mInBlockWriteIndex = activeObj -> mInBlockWriteIndex >= NB_BLOCKS_IN_FIFO ? 0 : activeObj -> mInBlockWriteIndex ;
                 activeObj -> mInBlockAvailable ++ ; 
             }else{
                 break ;
             }
-            data += RAW_ISO_BLOCK_SIZE/sizeof(uint32_t) ;
-            len -= RAW_ISO_BLOCK_SIZE;
+            data += RAW_ISO_BLOCK_IN_SIZE/sizeof(uint32_t) ;
+            len -= RAW_ISO_BLOCK_IN_SIZE;
         }
 	}
 	usb_prepare_transfer(&rx_transfer, _static_c_rx_buffer, RAWISO_RX_SIZE, 0);
@@ -69,13 +69,13 @@ void tx_event(transfer_t *t)
         //micro frame 
         if(activeObj != nullptr){
             uint16_t lenOfBuffer = 0 ;
-            uint16_t targetBufferLen = activeObj->mOutBlockAvailable > (NB_BLOCKS_IN_FIFO/2) ? (TX_TARGET+RAW_ISO_BLOCK_SIZE) : TX_TARGET ;
+            uint16_t targetBufferLen = activeObj->mOutBlockAvailable > (NB_BLOCKS_IN_FIFO/2) ? (TX_TARGET+RAW_ISO_BLOCK_OUT_SIZE) : TX_TARGET ;
             while(activeObj->mOutBlockAvailable > 0 && lenOfBuffer < (targetBufferLen/sizeof(uint32_t))){
-                memcpy(&_static_c_tx_buffer[lenOfBuffer], activeObj -> mOutBlockPtr[activeObj -> mOutBlockReadIndex], RAW_ISO_BLOCK_SIZE);
+                memcpy(&_static_c_tx_buffer[lenOfBuffer], activeObj -> mOutBlockPtr[activeObj -> mOutBlockReadIndex], RAW_ISO_BLOCK_OUT_SIZE);
                 activeObj -> mOutBlockReadIndex ++ ;
                 activeObj -> mOutBlockReadIndex = activeObj -> mOutBlockReadIndex >= NB_BLOCKS_IN_FIFO ? 0 : activeObj -> mOutBlockReadIndex ;
                 activeObj -> mOutBlockAvailable -- ; //Should mutex protect for safety
-                lenOfBuffer += (RAW_ISO_BLOCK_SIZE/sizeof(uint32_t));
+                lenOfBuffer += (RAW_ISO_BLOCK_OUT_SIZE/sizeof(uint32_t));
             }
             usb_prepare_transfer(&tx_transfer, _static_c_tx_buffer, lenOfBuffer*sizeof(uint32_t), 0);
             arm_dcache_flush_delete(_static_c_tx_buffer, lenOfBuffer*sizeof(uint32_t));
@@ -155,7 +155,7 @@ void IsochronousRxTx::begin(void)
     this -> mOutBlockReadIndex = 0;
     this -> mOutBlockPtr = (uint32_t **) malloc(NB_BLOCKS_IN_FIFO * sizeof(uint32_t *));
     for(int i = 0 ; i < NB_BLOCKS_IN_FIFO ; i ++){
-        this -> mOutBlockPtr[i] = (uint32_t *) malloc(RAW_ISO_BLOCK_SIZE) ;
+        this -> mOutBlockPtr[i] = (uint32_t *) malloc(RAW_ISO_BLOCK_OUT_SIZE) ;
     }
 
     this -> mInBlockAvailable = 0 ;
@@ -163,7 +163,7 @@ void IsochronousRxTx::begin(void)
     this -> mInBlockReadIndex = 0;
     this -> mInBlockPtr = (uint32_t **) malloc(NB_BLOCKS_IN_FIFO * sizeof(uint32_t *));
     for(int i = 0 ; i < NB_BLOCKS_IN_FIFO ; i ++){
-        this -> mInBlockPtr[i] = (uint32_t *) malloc(RAW_ISO_BLOCK_SIZE) ;
+        this -> mInBlockPtr[i] = (uint32_t *) malloc(RAW_ISO_BLOCK_IN_SIZE) ;
     }
 
     activeObj = this ;
@@ -184,7 +184,7 @@ bool IsochronousRxTx::sendBlock(uint8_t * data)
     __disable_irq();
     bool sent = false ;
     if(this->mOutBlockAvailable < NB_BLOCKS_IN_FIFO){
-        memcpy(this -> mOutBlockPtr[this -> mOutBlockWriteIndex], data, RAW_ISO_BLOCK_SIZE);
+        memcpy(this -> mOutBlockPtr[this -> mOutBlockWriteIndex], data, RAW_ISO_BLOCK_OUT_SIZE);
         this -> mOutBlockWriteIndex ++ ;
         this -> mOutBlockWriteIndex = this -> mOutBlockWriteIndex >= NB_BLOCKS_IN_FIFO ? 0 : this -> mOutBlockWriteIndex ;
         this -> mOutBlockAvailable ++ ; 
@@ -200,7 +200,7 @@ bool IsochronousRxTx::rcvBlock(uint8_t * data)
     __disable_irq();
     bool rcv = false ;
     if(this->mInBlockAvailable > 0){
-        memcpy(data, this -> mInBlockPtr[this -> mInBlockReadIndex], RAW_ISO_BLOCK_SIZE);
+        memcpy(data, this -> mInBlockPtr[this -> mInBlockReadIndex], RAW_ISO_BLOCK_IN_SIZE);
         this -> mInBlockReadIndex ++ ;
         this -> mInBlockReadIndex = this -> mInBlockReadIndex >=  NB_BLOCKS_IN_FIFO ? 0 : this -> mInBlockReadIndex ;
         this -> mInBlockAvailable -- ; 
