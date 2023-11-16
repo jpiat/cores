@@ -109,7 +109,7 @@ void tx_event(transfer_t *t)
     //}
 }
 
-void sync_event(transfer_t *t)
+/*void sync_event(transfer_t *t)
 {
 
         if(activeObj != nullptr){
@@ -127,7 +127,7 @@ void sync_event(transfer_t *t)
             usb_transmit(RAWISO_SYNC_ENDPOINT, &sync_transfer);
         }
 
-}
+}*/
 
 
 void usb_rawiso_configure(void)
@@ -143,8 +143,8 @@ void usb_rawiso_configure(void)
   memset(&tx_transfer, 0, sizeof(tx_transfer));
   usb_config_tx_iso(RAWISO_TX_ENDPOINT, RAWISO_TX_SIZE, 1, tx_event);
   tx_event(NULL);
-  usb_config_tx_iso(RAWISO_SYNC_ENDPOINT, RAWISO_SYNC_TX_SIZE, 1, sync_event);
-  sync_event(NULL);
+  /*usb_config_tx_iso(RAWISO_SYNC_ENDPOINT, RAWISO_SYNC_TX_SIZE, 1, sync_event);
+  sync_event(NULL);*/
 }
 
 void IsochronousRxTx::begin(void)

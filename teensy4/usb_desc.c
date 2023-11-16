@@ -1271,7 +1271,7 @@ PROGMEM const uint8_t usb_config_descriptor_480[CONFIG_DESC_SIZE] = {
         0x01,                                   // bmAttributes (0x03=intr)
         LSB(RAWISO_RX_SIZE), MSB(RAWISO_RX_SIZE),                      // wMaxPacketSize
         RAWISO_RX_INTERVAL,                     // bInterval
-        9,                                      // bLength
+        /*9,                                      // bLength
         4,                                      // bDescriptorType
         RAWISO_SYNC_INTERFACE,                       // bInterfaceNumber
         0,                                      // bAlternateSetting
@@ -1286,7 +1286,7 @@ PROGMEM const uint8_t usb_config_descriptor_480[CONFIG_DESC_SIZE] = {
         RAWISO_SYNC_ENDPOINT | 0x80,              // bEndpointAddress
         0x01,                                   // bmAttributes (0x03=intr)
         LSB(RAWISO_SYNC_TX_SIZE), MSB(RAWISO_SYNC_TX_SIZE),                      // wMaxPacketSize
-        RAWISO_SYNC_TX_INTERVAL,                     // bInterval
+        RAWISO_SYNC_TX_INTERVAL,                     // bInterval*/
 #endif // RAWISO_INTERFACE
 
 

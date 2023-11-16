@@ -631,10 +631,10 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define RAWISO_RX_ENDPOINT    3
   #define RAWISO_RX_INTERVAL    2	 // TODO: is this ok for 480 Mbit speed
   #define RAWISO_RX_SIZE        (128) //One block overhead to allow to transmit either 6 or 7 blocks of data
-  #define RAWISO_SYNC_INTERFACE	1
+  /*#define RAWISO_SYNC_INTERFACE	1
   #define RAWISO_SYNC_ENDPOINT	4
   #define RAWISO_SYNC_TX_INTERVAL 2
-  #define RAWISO_SYNC_TX_SIZE 4
+  #define RAWISO_SYNC_TX_SIZE 4*/
   #define SEREMU_INTERFACE      2	// Serial emulation
   #define SEREMU_TX_ENDPOINT    2
   #define SEREMU_TX_SIZE        32
@@ -644,7 +644,7 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define SEREMU_RX_INTERVAL    4	 // TODO: is this ok for 480 Mbit speed
   #define ENDPOINT2_CONFIG	ENDPOINT_RECEIVE_INTERRUPT + ENDPOINT_TRANSMIT_INTERRUPT
   #define ENDPOINT3_CONFIG	ENDPOINT_RECEIVE_ISOCHRONOUS + ENDPOINT_TRANSMIT_ISOCHRONOUS
-  #define ENDPOINT4_CONFIG	ENDPOINT_RECEIVE_UNUSED + ENDPOINT_TRANSMIT_ISOCHRONOUS
+  //#define ENDPOINT4_CONFIG	ENDPOINT_RECEIVE_UNUSED + ENDPOINT_TRANSMIT_ISOCHRONOUS
 
 
 #elif defined(USB_FLIGHTSIM)
