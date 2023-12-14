@@ -6,6 +6,8 @@
 
 #ifdef RAWISO_INTERFACE // defined by usb_dev.h -> usb_desc.h
 
+
+
 extern volatile uint8_t usb_high_speed;
 transfer_t tx_transfer __attribute__ ((used, aligned(32)));
 transfer_t rx_transfer __attribute__ ((used, aligned(32)));
@@ -143,7 +145,6 @@ void usb_rawiso_configure(void)
   /*usb_config_tx_iso(RAWISO_SYNC_ENDPOINT, RAWISO_SYNC_TX_SIZE, 1, sync_event);
   sync_event(NULL);*/
 }
-
 
 void IsochronousRxTx::begin(void)
 {
