@@ -33,20 +33,25 @@ static void rx_event(transfer_t *t)
 {
 	if (t && activeObj) {
 		int len = RAWISO_RX_SIZE - ((rx_transfer.status >> 16) & 0x7FFF);
-
+        //We could use one word as an header t oindicate if this is an empty packet or not.
         uint32_t * data = _static_c_rx_buffer ;
-        while(len > 0){
-            if(activeObj->mInBlockAvailable < NB_BLOCKS_IN_FIFO){
-                memcpy(activeObj -> mInBlockPtr[activeObj -> mInBlockWriteIndex], data, RAW_ISO_BLOCK_IN_SIZE);
-                activeObj -> mInBlockWriteIndex ++ ;
-                activeObj -> mInBlockWriteIndex = activeObj -> mInBlockWriteIndex >= NB_BLOCKS_IN_FIFO ? 0 : activeObj -> mInBlockWriteIndex ;
-                activeObj -> mInBlockAvailable ++ ; 
-            }else{
-                break ;
+        if(data[0] != 0){
+            data ++ ; //skip the header
+            len -= 4 ;
+            while(len > 0){
+                if(activeObj->mInBlockAvailable < NB_BLOCKS_IN_FIFO){
+                    memcpy(activeObj -> mInBlockPtr[activeObj -> mInBlockWriteIndex], data, RAW_ISO_BLOCK_IN_SIZE);
+                    activeObj -> mInBlockWriteIndex ++ ;
+                    activeObj -> mInBlockWriteIndex = activeObj -> mInBlockWriteIndex >= NB_BLOCKS_IN_FIFO ? 0 : activeObj -> mInBlockWriteIndex ;
+                    activeObj -> mInBlockAvailable ++ ; 
+                }else{
+                    break ;
+                }
+                data += (RAW_ISO_BLOCK_IN_SIZE)/sizeof(uint32_t) ;
+                len -= RAW_ISO_BLOCK_IN_SIZE ;
             }
-            data += RAW_ISO_BLOCK_IN_SIZE/sizeof(uint32_t) ;
-            len -= RAW_ISO_BLOCK_IN_SIZE;
         }
+        
 	}
 	usb_prepare_transfer(&rx_transfer, _static_c_rx_buffer, RAWISO_RX_SIZE, 0);
 	arm_dcache_delete(&_static_c_rx_buffer, RAWISO_RX_SIZE);
@@ -128,6 +133,8 @@ void tx_event(transfer_t *t)
         }
 
 }*/
+
+
 
 void usb_rawiso_configure(void)
 {

@@ -22,7 +22,7 @@ extern int usb_rawiso_get_feature(void *stp, uint8_t *data, uint32_t *datalen);
 
 #define NB_BLOCKS_IN_FIFO 8
 #define RAW_ISO_BLOCK_OUT_SIZE 512
-#define RAW_ISO_BLOCK_IN_SIZE RAWISO_RX_SIZE
+#define RAW_ISO_BLOCK_IN_SIZE (RAWISO_RX_SIZE - 4)
 class IsochronousRxTx
 {
 public:
